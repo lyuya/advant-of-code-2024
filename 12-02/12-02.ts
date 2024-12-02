@@ -16,23 +16,70 @@ const checkSafe = (array: string[]) => {
 }
 
 const checkSafe2 = (array: string[]) => {
-    const increasing = parseInt(array[array.length - 1]) - parseInt(array[0]) > 0;
-    const dummyEle = increasing ? parseInt(array[0]) - 1 : parseInt(array[0]) + 1;
-    let newArray = [dummyEle, ...array.map(n => parseInt(n))];
+    const numbers = array.map(str => parseInt(str));
+    const increasing = checkIncreasingOrDecreasing(numbers);
+    let intrus;
+    if (increasing) {
+        intrus = allElementsAreIncreasingAndSafe(numbers)
+    } else {
+        intrus = allElementsAreDecreasingAndSafe(numbers)
+    }
+
+    if (intrus.length === 0) return true;
+
+    const copy = [...numbers]
+    copy.splice(intrus[0], 1);
+
+    let intrus2;
+    if (increasing) {
+        intrus2 = allElementsAreIncreasingAndSafe(copy)
+    } else {
+        intrus2 = allElementsAreDecreasingAndSafe(copy)
+    }
+
+    const copy2 = [...numbers]
+    copy2.splice(intrus[0]-1, 1);
+
+    let intrus3;
+    if (increasing) {
+        intrus3 = allElementsAreIncreasingAndSafe(copy2)
+    } else {
+        intrus3 = allElementsAreDecreasingAndSafe(copy2)
+    }
+
+    return intrus2.length === 0 || intrus3.length === 0;
+
 }
 
-const checkAll  = (increasing: boolean, array: number[] ) => {
-    let res = [];
-    if (increasing) {
-        res = array.filter((num, i) => {
-            if (array[i+1] - num <= 0 || array[i+1] - num > 3) return i;
-        });
-    } else {
-        res = array.filter((num, i) => {
-            if (array[i+1] - num >= 0 || array[i+1] - num < -3) return i;
-        });
+const checkIncreasingOrDecreasing = (array: number[]) => {
+    const soustractions = []
+    for (let i = 1; i < array.length; i++) {
+        soustractions.push(array[i] - array[i-1]);
     }
-    return res;
+    const positives = soustractions.filter(s => s > 0);
+    return positives.length > array.length / 2;
+}
+
+const allElementsAreIncreasingAndSafe = (array: number[]) => {
+    const intrus = [];
+    for (let i = 1;i < array.length; i++) {
+        const dif = array[i] - array[i-1]
+        if (dif <= 0 || dif > 3) {
+            intrus.push(i);
+        }
+    }
+    return intrus;
+}
+
+const allElementsAreDecreasingAndSafe = (array: number[]) => {
+    const intrus = [];
+    for (let i = 1;i < array.length; i++) {
+        const dif = array[i] - array[i-1];
+        if (dif >= 0 || dif < -3) {
+            intrus.push(i);
+        }
+    }
+    return intrus;
 }
 
 const createArray = async () => {
