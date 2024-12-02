@@ -7,11 +7,11 @@ async function displayResultOfTheDay () {
 
     const tab = data.split('\n')
     for (let i = 0 ; i < tab.length ; i++) {
-    const line = tab[i].split('   ')
-    tab1.push(parseInt(line[0]));
-    tab2.push(parseInt(line[1]));
-    tab1.sort();
-    tab2.sort();
+        const line = tab[i].split('   ')
+        tab1.push(parseInt(line[0]));
+        tab2.push(parseInt(line[1]));
+        tab1.sort();
+        tab2.sort();
     }
 }
 
