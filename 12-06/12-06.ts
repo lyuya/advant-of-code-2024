@@ -1,5 +1,6 @@
 import { fetchData } from "../fetchTextFile";
 
+let history = new Set();
 async function partOne() {
     let map = await createRulesAndTests();
 
@@ -14,8 +15,9 @@ async function partOne() {
         }
     }
 
-    const replaceXAndCount = () => {
+    const replaceXAndCount = (position) => {
         count++
+        history.add(position);
         map[currentPosition[1]][currentPosition[0]] = 'X';
     } 
     // move
@@ -24,14 +26,14 @@ async function partOne() {
             case '^':
                 while (map[currentPosition[1]][currentPosition[0]] === '.' || map[currentPosition[1]][currentPosition[0]] === 'X') {
                     if (map[currentPosition[1]][currentPosition[0]] === '.') {
-                        replaceXAndCount()
+                        replaceXAndCount(currentPosition)
                     }
 
                     currentPosition = [currentPosition[0], currentPosition[1]-1];
 
                     // touch border
                     if (!map[currentPosition[1]-1]?.[currentPosition[0]]) {
-                        replaceXAndCount()
+                        replaceXAndCount(currentPosition)
                         break;
                     }
                     // obstacle
@@ -46,7 +48,7 @@ async function partOne() {
             case '>':
                 while (map[currentPosition[1]][currentPosition[0]] === '.' || map[currentPosition[1]][currentPosition[0]] === 'X') {
                     if (map[currentPosition[1]][currentPosition[0]] === '.') {
-                        replaceXAndCount()
+                        replaceXAndCount(currentPosition)
                     }
 
 
@@ -59,7 +61,7 @@ async function partOne() {
                     }
                     // touch border
                     if (!map[currentPosition[1]][currentPosition[0]+1]) {
-                        replaceXAndCount()
+                        replaceXAndCount(currentPosition)
                         break;
                     }
                 }
@@ -69,13 +71,13 @@ async function partOne() {
             case 'v':
                 while (map[currentPosition[1]][currentPosition[0]] === '.' || map[currentPosition[1]][currentPosition[0]] === 'X') {
                     if (map[currentPosition[1]][currentPosition[0]] === '.') {
-                        replaceXAndCount()
+                        replaceXAndCount(currentPosition)
                     }
                     currentPosition = [currentPosition[0], currentPosition[1]+1];
 
                     // touch border
                     if (!map[currentPosition[1]+1]?.[currentPosition[0]]) {
-                        replaceXAndCount()
+                        replaceXAndCount(currentPosition)
                         break;
                     }
                     // obstacle
@@ -90,7 +92,7 @@ async function partOne() {
             case '<':
                 while (map[currentPosition[1]][currentPosition[0]] === '.' || map[currentPosition[1]][currentPosition[0]] === 'X') {
                     if (map[currentPosition[1]][currentPosition[0]] === '.') {
-                        replaceXAndCount()
+                        replaceXAndCount(currentPosition)
                     }
                     
                     currentPosition = [currentPosition[0]-1, currentPosition[1]];
@@ -103,7 +105,7 @@ async function partOne() {
 
                     // touch border
                     if (!map[currentPosition[1]][currentPosition[0]-1]) {
-                        replaceXAndCount()
+                        replaceXAndCount(currentPosition)
                         break;
                     }
                 }
@@ -116,17 +118,10 @@ async function partOne() {
     return count;
 }
 
-const next = {
-    '^': '>',
-    '>': 'v',
-    'v': '<',
-    '<': '^'
-}
+// ----------------------------------
 
-async function partTwo() {
-    let map = await createRulesAndTests();
+function movePartTwo(map, stop, countLoop) {
 
-    // find start position
     let currentPosition;
     let count = 0;
     for (let i = 0; i < map.length; i++) {
@@ -137,7 +132,56 @@ async function partTwo() {
         }
     }
 
+    const moveInDirection = (dx, dy, nextMove) => {
+        while (map[currentPosition[1]][currentPosition[0]] === '.') {
+            count++;
+            currentPosition = [currentPosition[0] + dx, currentPosition[1] + dy];
     
+            // Touch border or obstacle
+            const nextPosition = [currentPosition[0] + dx, currentPosition[1] + dy];
+            if (!map[nextPosition[1]]?.[nextPosition[0]]) break;
+            if (map[nextPosition[1]][nextPosition[0]] === '#') {
+                move(nextMove);
+                break;
+            }
+        }
+    };
+    
+    const move = (direction) => {
+        if (count >= stop) {
+            countLoop++;
+            return;
+        }
+        const directions = {
+            '^': { dx: 0, dy: -1, next: '>' },
+            '>': { dx: 1, dy: 0, next: 'v' },
+            'v': { dx: 0, dy: 1, next: '<' },
+            '<': { dx: -1, dy: 0, next: '^' },
+        };
+        const { dx, dy, next } = directions[direction];
+        moveInDirection(dx, dy, next);
+    };
+    move('^')
+    return countLoop;
+}
+
+async function partTwo() {
+    let map = await createRulesAndTests();
+    let countLoop = 0;
+
+    const nbPlaces = map.length * map[0].length;
+    let newMap;
+
+    history.forEach((point) => {
+        if (map[point[1]][point[0]] !== '#' && map[point[1]][point[0]] !== '^') {
+            newMap = JSON.parse(JSON.stringify(map));
+            newMap[point[1]][point[0]] = '#';
+            countLoop = movePartTwo(newMap, nbPlaces, countLoop);
+        }
+
+    });
+
+    return countLoop;
 }
 
 const createRulesAndTests = async () => {
@@ -146,9 +190,30 @@ const createRulesAndTests = async () => {
 }
 
 
+
 export async function main() {
-    // console.log('-------------------------------------------');
-    // console.log('part one result: ', await partOne());
+    console.log('-------------------------------------------');
+    console.log('part one result: ', await partOne());
     console.log('-------------------------------------------');
     console.log('part two result: ', await partTwo());
 }
+
+// async function partTwo() {
+//     let map = await createRulesAndTests();
+//     let count = 0;
+
+//     const nbPlaces = map.length * map[0].length;
+//     let newMap;
+
+//     history.forEach((point) => {
+//         if (map[point[1]][point[0]] !== '#' && map[point[1]][point[0]] !== '^') {
+//             newMap = JSON.parse(JSON.stringify(map));
+//             map[point[1]][point[0]] = '#';
+//             count = movePartTwo(newMap, nbPlaces, count);
+//             console.log('count', count);
+//         }
+
+//     });
+
+//     return count;
+// }
